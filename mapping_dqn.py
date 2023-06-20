@@ -1,8 +1,5 @@
 from environment import QubitAssignmentEnv
-from QNetwork import QNetwork
-import matplotlib
 import matplotlib.pyplot as plt
-import numpy as np
 import reverb
 
 import tensorflow as tf
@@ -10,22 +7,15 @@ import tensorflow as tf
 from tf_agents.agents.dqn import dqn_agent
 from tf_agents.drivers import py_driver
 from tf_agents.environments import tf_py_environment
-from tf_agents.eval import metric_utils
-from tf_agents.metrics import tf_metrics
-from tf_agents.networks import sequential
-from tf_agents.networks import Sequential
 from tf_agents.networks import q_network
 from tf_agents.policies import py_tf_eager_policy
-from tf_agents.drivers import dynamic_episode_driver
 from tf_agents.replay_buffers import reverb_replay_buffer
 from tf_agents.replay_buffers import reverb_utils
 from tf_agents.policies import random_tf_policy
-from tf_agents.trajectories import trajectory
 from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
 from tf_agents.policies import policy_saver
 import os
-from tf_agents.policies import q_policy
 
 num_iterations = 25000 # @param {type:"integer"}
 
@@ -43,9 +33,6 @@ eval_interval = 100  # @param {type:"integer"}
 num_qubits = 5
 depth = 5
 
-#env = QubitAssignmentEnv(num_qubits, depth)
-#env.reset()
-
 train_py_env = QubitAssignmentEnv(num_qubits, depth)
 eval_py_env = QubitAssignmentEnv(num_qubits, depth)
 
@@ -54,27 +41,6 @@ train_env = tf_py_environment.TFPyEnvironment(train_py_env)
 eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
 
 fc_layer_params = (32,32)
-#action_tensor_spec = tensor_spec.from_spec(env.action_spec())
-#num_actions = action_tensor_spec.maximum - action_tensor_spec.minimum + 1
-
-""" def dense_layer(num_units):
-  return tf.keras.layers.Dense(
-      num_units,
-      activation=tf.keras.activations.relu,
-      kernel_initializer=tf.keras.initializers.VarianceScaling(
-          scale=2.0, mode='fan_in', distribution='truncated_normal'))
-
-# QNetwork consists of a sequence of Dense layers followed by a dense layer
-# with `num_actions` units to generate one q_value per available action as
-# its output.
-dense_layers = [dense_layer(num_units) for num_units in fc_layer_params]
-q_values_layer = tf.keras.layers.Dense(
-    num_actions,
-    activation=None,
-    kernel_initializer=tf.keras.initializers.RandomUniform(
-        minval=-0.03, maxval=0.03),
-    bias_initializer=tf.keras.initializers.Constant(-0.2))
-q_net = sequential.Sequential([tf.keras.layers.Flatten()] + dense_layers + [q_values_layer]) """
 
 q_net = q_network.QNetwork(
     input_tensor_spec=train_env.observation_spec(),
@@ -99,7 +65,6 @@ agent = dqn_agent.DqnAgent(
     summarize_grads_and_vars = False,
     target_update_tau = 0.7,
     target_update_period=10,
-    #boltzmann_temperature=0.5,
     epsilon_greedy=1.0,
     td_errors_loss_fn=common.element_wise_squared_loss,
     train_step_counter=train_step_counter)
@@ -167,16 +132,16 @@ train_checkpointer = common.Checkpointer(
 )
 
 # Restore from checkpoint
-train_checkpointer.initialize_or_restore()
+#train_checkpointer.initialize_or_restore()
 
 #Run the random policy for a few steps to populate the replay buffer with data.
 #@test {"skip": true}
-""" py_driver.PyDriver(
+py_driver.PyDriver(
     train_py_env,
     py_tf_eager_policy.PyTFEagerPolicy(
       random_policy, use_tf_function=True),
     [rb_observer],
-    max_steps=initial_collect_steps).run(train_py_env.reset()) """
+    max_steps=initial_collect_steps).run(train_py_env.reset())
 
 # Dataset generates trajectories with shape (Batchx2x...)
 dataset = replay_buffer.as_dataset(

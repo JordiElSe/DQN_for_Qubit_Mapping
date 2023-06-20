@@ -67,7 +67,6 @@ class QubitAssignmentEnv(py_environment.PyEnvironment):
             qubit2 = self.swaps[action][1]
             self.current_mapping[qubit1], self.current_mapping[qubit2] = self.current_mapping[qubit2], self.current_mapping[qubit1]
             for i in range(self.num_qubits):
-                #self._state[qubit1][i], self._state[qubit2][i] = self._state[qubit2][i], self._state[qubit1][i]
                 for j in range(self.depth):
                     if self._initial_state[i][j] >= 0 and self._initial_state[i][j] < self.num_qubits:
                         self._state[self.current_mapping[i]][j] = self.current_mapping[self._initial_state[i][j]]
@@ -81,12 +80,7 @@ class QubitAssignmentEnv(py_environment.PyEnvironment):
         self.prev_depth = new_depth
         if self.moves >= 3*self.num_qubits-1:
             self._episode_ended = True
-            #if self._last_action and action == self._last_action:
-            #    return ts.termination(self._state, reward=-100)
             return ts.termination(self._state, reward=reward)
-        #if self._last_action and action == self._last_action:
-        #    return ts.transition(self._state, reward=-100, discount=0.9)
-        #self._last_action = action
         return ts.transition(self._state, reward=reward, discount=1)
 
     def get_initial_state(self, num_qubits, depth):
@@ -323,5 +317,4 @@ class QubitAssignmentEnv(py_environment.PyEnvironment):
                 raise ValueError(f'Gate {gate[0].name} not supported')
         return lists
 
-#environment = QubitAssignmentEnv(5,5)
-#utils.validate_py_environment(environment, episodes=5)
+
